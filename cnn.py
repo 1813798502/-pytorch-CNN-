@@ -15,7 +15,6 @@
 6、定义训练函数
 7、定义测试函数
 8、保存模型
-9、验证模型
 """
 
 import torch
@@ -26,15 +25,16 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import numpy as np
-from PIL import Image
 
-# 图片地址
+# 图片地址 替换为自己的数据集
+# 训练集
 train_datadir = 'E:\\python 项目\\pinn\\CNN_picture\\big_data\\train\\'
+# 数据集
 test_datadir = 'E:\\python 项目\\pinn\\CNN_picture\\big_data\\val\\'
 
 train_transforms = transforms.Compose([
     transforms.Resize([224, 224]),  # 将输入图片resize成统一尺寸
-    transforms.RandomRotation(degrees=(-15, 15)),  # 随机旋转，-10到10度之间随机选
+    transforms.RandomRotation(degrees=(-15, 15)),  # 随机旋转，-15到15度之间随机选
     transforms.RandomHorizontalFlip(p=0.5),  # 随机水平翻转 选择一个概率概率
     # transforms.RandomVerticalFlip(p=0.5),  # 随机垂直翻转（效果可能会变差）
     transforms.RandomPerspective(distortion_scale=0.6, p=1.0),  # 随机视角
@@ -99,19 +99,23 @@ plt.tight_layout()
 plt.savefig('pic1.jpg', dpi=600)  # 保存图像
 plt.show()
 
-
+# 构建网络
 class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
+        # 卷积层
         # Conv2d的第一个参数是输入的channel数量，第二个是输出的channel数量，第三个是kernel size
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
+        # 连接层
         # 由于上一层有16个channel输出，每个feature map大小为53*53，所以全连接层的输入是16*53*53
         self.fc1 = nn.Linear(16 * 53 * 53, 120)
         self.fc2 = nn.Linear(120, 84)
         # 最终有10类，所以最后一个全连接层输出数量是10
         self.fc3 = nn.Linear(84, 2)
+        # 池化层
         self.pool = nn.MaxPool2d(2, 2)
+        # 正则化
         self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
@@ -130,12 +134,15 @@ class LeNet(nn.Module):
 
 
 model = LeNet().to(device)
+# 可以输出一下模型，看是否正确
 # print(model)
 # 定义损失函数，优化器
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+# 也可以用Adam优化器
+# optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-
+# 训练函数
 def train(dataloader, model, loss_fn, optimizer, epochs):
     size = len(dataloader.dataset)
     model.train()
@@ -167,7 +174,7 @@ def train(dataloader, model, loss_fn, optimizer, epochs):
     plt.savefig('loss.png')
     plt.show()
 
-
+# 测试函数
 def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -183,10 +190,12 @@ def test(dataloader, model, loss_fn):
     correct /= size
     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-
+# 训练次数
 epochs = 1000
+# 开始训练
 train(train_loader, model, loss_fn, optimizer, epochs)
+# 开始测试
 test(test_loader, model, loss_fn)
 
 # 保存整个模型的状态字典
-torch.save(model.state_dict(), 'cnn.pth')
+torch.save(model.state_dict(), 'model1.pth')
