@@ -37,7 +37,7 @@ class LeNet(nn.Module):
 
 # 加载模型权重
 model = LeNet()
-model.load_state_dict(torch.load('model.pth'))
+model.load_state_dict(torch.load('model1.pth'))
 model.eval()  # 设置模型为评估模式
 
 # 对图像进行与训练时相同的预处理
